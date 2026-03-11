@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UserVoice — Custom Fields</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Proxima+Nova:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue-9:  #071e3e;
+      --blue-8:  #0c3268;
+      --blue-7:  #165abb;
+      --blue-6:  #1b6ee4;
+      --blue-2:  #eaf2fd;
+      --blue-1:  #f5f9fe;
+      --gray-6:  #464653;
+      --gray-5:  #787885;
+      --gray-4:  #aaaab4;
+      --gray-3:  #dadade;
+      --gray-2:  #f5f5f8;
+      --gray-1:  #fafafc;
+      --pn: 'Proxima Nova', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    body {
+      font-family: var(--pn);
+      background: var(--gray-2);
+      color: var(--blue-9);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ───── Top Nav ───── */
+    .topnav {
+      height: 56px;
+      background: var(--blue-8);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .topnav-logo {
+      display: flex; align-items: center; gap: 8px;
+      color: white; font-size: 15px; font-weight: 700;
+      letter-spacing: -0.3px; margin-right: 28px; text-decoration: none;
+    }
+    .topnav-logo-mark {
+      width: 28px; height: 28px; background: var(--blue-6);
+      border-radius: 6px; display: flex; align-items: center;
+      justify-content: center; font-size: 12px; font-weight: 800; color: white;
+    }
+    .breadcrumb {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: rgba(255,255,255,0.55);
+    }
+    .breadcrumb a { color: rgba(255,255,255,0.55); text-decoration: none; transition: color 0.15s; }
+    .breadcrumb a:hover { color: white; }
+    .breadcrumb .current { color: white; font-weight: 500; }
+    .breadcrumb-sep { opacity: 0.35; font-size: 11px; }
+
+    /* ───── Layout ───── */
+    .layout { display: flex; flex: 1; min-height: 0; }
+
+    /* ───── Sidebar ───── */
+    .sidebar {
+      width: 216px; background: white;
+      border-right: 1px solid var(--gray-3);
+      display: flex; flex-direction: column;
+      flex-shrink: 0; padding: 20px 0;
+    }
+    .sidebar-section { margin-bottom: 6px; }
+    .sidebar-section-label {
+      font-size: 10px; font-weight: 600; color: var(--gray-4);
+      letter-spacing: 0.09em; text-transform: uppercase;
+      padding: 6px 20px 4px;
+    }
+    .sidebar-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 7px 20px; font-size: 13.5px; font-weight: 500;
+      color: var(--gray-6); cursor: pointer; text-decoration: none;
+      position: relative; transition: background 0.12s, color 0.12s;
+    }
+    .sidebar-item:hover { background: var(--blue-1); color: var(--blue-7); }
+    .sidebar-item.active {
+      background: var(--blue-2); color: var(--blue-6); font-weight: 600;
+    }
+    .sidebar-item.active::before {
+      content: ''; position: absolute; left: 0; top: 5px; bottom: 5px;
+      width: 3px; background: var(--blue-6); border-radius: 0 2px 2px 0;
+    }
+    .sidebar-item.sub { padding-left: 38px; font-size: 13px; font-weight: 400; }
+    .sidebar-item svg { flex-shrink: 0; opacity: 0.65; }
+    .sidebar-item.active svg { opacity: 1; }
+    .sidebar-divider { height: 1px; background: var(--gray-3); margin: 8px 20px; }
+
+    /* ───── Main ───── */
+    .main { flex: 1; padding: 32px 40px; overflow: auto; }
+    .page-title {
+      font-size: 21px; font-weight: 700; color: var(--blue-9);
+      letter-spacing: -0.2px; margin-bottom: 8px;
+    }
+    .page-desc {
+      font-size: 15px; font-weight: 400; color: var(--gray-6);
+      line-height: 1.6; max-width: 660px; margin-bottom: 12px;
+    }
+    .info-banner {
+      background: var(--blue-2); border-radius: 6px;
+      padding: 11px 15px; font-size: 13px; color: var(--gray-6);
+      line-height: 1.55; max-width: 660px; margin-bottom: 20px;
+      display: flex; gap: 9px; align-items: flex-start;
+    }
+    .info-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+    .toolbar {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 14px;
+    }
+    .toolbar-left { display: flex; align-items: center; gap: 8px; }
+
+    .search-box {
+      display: flex; align-items: center; gap: 7px;
+      border: 1px solid var(--gray-3); border-radius: 6px;
+      padding: 7px 12px; background: white; width: 210px;
+      transition: border-color 0.15s;
+    }
+    .search-box:focus-within { border-color: var(--blue-6); }
+    .search-box input {
+      border: none; outline: none; font-size: 13px; color: var(--blue-9);
+      font-family: var(--pn); width: 100%; background: transparent;
+    }
+    .search-box input::placeholder { color: var(--gray-4); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 15px; border-radius: 6px; font-size: 13.5px;
+      font-weight: 500; cursor: pointer; border: none;
+      transition: background 0.15s; font-family: var(--pn); letter-spacing: 0.01em;
+    }
+    .btn-primary { background: var(--blue-6); color: white; }
+    .btn-primary:hover { background: var(--blue-7); }
+    .btn-ghost { background: white; color: var(--gray-6); border: 1px solid var(--gray-3); }
+    .btn-ghost:hover { background: var(--gray-2); }
+
+    /* ───── Table ───── */
+    .table-wrap {
+      background: white; border-radius: 8px;
+      border: 1px solid var(--gray-3); overflow: hidden;
+    }
+    .connection-banner {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; border: 1px solid var(--gray-3); border-radius: 8px;
+      background: white; margin-bottom: 20px; gap: 16px;
+    }
+    .connection-banner-left { display: flex; flex-direction: column; gap: 3px; }
+    .connection-banner-title {
+      font-size: 14px; font-weight: 600; color: #071e3e; font-family: var(--pn);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .connection-banner-url {
+      font-size: 12px; color: #787885; font-family: var(--pn);
+    }
+    .connection-banner-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .sync-status-bar {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 6px 12px; border-radius: 20px;
+      background: #f5f5f8; margin-bottom: 16px;
+    }
+    .sync-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    }
+    .sync-dot.syncing { background: #1b6ee4; animation: pulse 1.4s ease-in-out infinite; }
+    .sync-dot.synced  { background: #1a8a4a; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; } 50% { opacity: 0.35; }
+    }
+    .sync-status-text {
+      font-size: 12px; font-weight: 500; color: #787885; font-family: var(--pn);
+    }
+    .sync-status-time { color: #aaaab4; font-weight: 400; }
+    tbody tr { cursor: pointer; }
+    tbody tr:hover td { background: #fafafc; }
+    .field-count {
+      font-size: 12px; color: var(--gray-4); font-weight: 500; padding: 9px 16px 6px;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    thead { background: var(--gray-2); border-bottom: 1px solid var(--gray-3); }
+    th {
+      padding: 11px 20px; text-align: left; font-size: 11px; font-weight: 600;
+      color: var(--gray-5); letter-spacing: 0.07em; text-transform: uppercase;
+      white-space: nowrap;
+    }
+    td {
+      padding: 18px 20px; color: var(--blue-9);
+      vertical-align: middle; border-bottom: 1px solid var(--gray-3);
+    }
+    tr:last-child td { border-bottom: none; }
+    tbody tr { transition: background 0.1s; }
+    tbody tr:hover { background: var(--blue-1); }
+
+    .uv-field { font-weight: 600; }
+    .sf-field-name { font-size: 13.5px; font-weight: 500; color: var(--gray-6); }
+    .sf-field-api  { font-size: 12px; color: var(--gray-4); font-weight: 400; }
+    .sf-field {
+      font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+      font-size: 12px; color: var(--gray-6); background: var(--gray-2);
+      padding: 3px 7px; border-radius: 4px; display: inline-block;
+    }
+    .type-cell {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: 13px; font-weight: 500; color: var(--gray-6); white-space: nowrap;
+    }
+    .type-cell img { width: 20px; height: 20px; object-fit: contain; flex-shrink: 0; }
+    .type-cell img.toggle-icon { width: 20px; height: 12px; }
+
+    .plan-badge {
+      font-size: 13px; font-weight: 500; color: var(--gray-6);
+    }
+
+    .status-badge {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 12px; font-weight: 600; white-space: nowrap;
+    }
+    .status-active  { background: #e4f5ec; color: #1a8a4a; }
+    .status-syncing { background: #eaf2fd; color: #1b6ee4; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    .avatar {
+      width: 26px; height: 26px; border-radius: 50%;
+      object-fit: cover; flex-shrink: 0;
+    }
+    .edited-by { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--gray-6); }
+
+    .row-actions { display: flex; align-items: center; gap: 5px; opacity: 0; transition: opacity 0.15s; }
+    tbody tr:hover .row-actions { opacity: 1; }
+    .action-btn {
+      padding: 4px 10px; border-radius: 5px; font-size: 12px; font-weight: 500;
+      cursor: pointer; border: 1px solid var(--gray-3); background: white;
+      color: var(--gray-6); font-family: var(--pn); transition: background 0.12s;
+    }
+    .action-btn:hover { background: var(--gray-2); }
+    .action-btn.map { border-color: var(--blue-6); color: var(--blue-6); }
+    .action-btn.map:hover { background: var(--blue-2); }
+    .icon-btn {
+      width: 27px; height: 27px; border-radius: 5px; border: 1px solid var(--gray-3);
+      background: white; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--gray-5); transition: background 0.12s;
+    }
+    .icon-btn:hover { background: var(--gray-2); }
+
+    /* ───── Overlay ───── */
+    .overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(7,30,62,0.4); z-index: 200; backdrop-filter: blur(1px);
+    }
+    .overlay.open { display: block; }
+
+    /* ─────────────────────────────────────────────
+       SLIDE PANEL — pixel-faithful to Figma spec
+       Width: 389px  Shadow: -7px -6px 14px rgba(0,0,0,.15)
+    ───────────────────────────────────────────── */
+    .slide-panel {
+      position: fixed; top: 0; right: -420px; width: 389px; height: 100vh;
+      background: white; z-index: 201;
+      box-shadow: -7px -6px 14px 0px rgba(0,0,0,0.15);
+      display: flex; flex-direction: column;
+      transition: right 0.28s cubic-bezier(0.4,0,0.2,1);
+      overflow: hidden; font-family: var(--pn);
+    }
+    .sp-scrollable { overflow-y: auto; flex: 1; position: relative; z-index: 1; }
+    .slide-panel.open { right: 0; }
+
+    /* Header: bg #0c3268 h-75px p-20px */
+    .sp-header {
+      background: #0c3268; height: 75px;
+      padding: 20px; display: flex; align-items: center;
+      justify-content: space-between; flex-shrink: 0;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .sp-header-title {
+      color: white; font-size: 16px; font-weight: 500;
+      font-family: var(--pn); line-height: 1.4;
+    }
+    .sp-header-close-img { height: 11.3px; width: 42.3px; object-fit: contain; }
+    .sp-header-close {
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 16px; cursor: pointer; background: none; border: none;
+    }
+
+    /* Body: bg white px-40px py-22px gap-16px */
+    .sp-body {
+      background: white; padding: 22px 40px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+
+    /* Title row: gap-19px */
+    .sp-title-row { display: flex; align-items: center; gap: 19px; width: 271px; }
+    .sp-title-icon { width: 36px; height: 36px; flex-shrink: 0; object-fit: contain; }
+    .sp-title-text {
+      font-size: 18px; font-weight: 700; color: #071e3e;
+      font-family: var(--pn); line-height: 1.2;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* Description */
+    .sp-description {
+      font-size: 16px; font-weight: 500; color: #464653;
+      font-family: var(--pn); line-height: 1.55;
+    }
+
+    /* Gradient divider (Figma image) */
+    .sp-gradient-divider {
+      height: 2px; width: 100%; flex-shrink: 0;
+      box-shadow: 12px 15px 40px 0px rgba(7,30,62,0.19);
+      object-fit: cover; display: block;
+    }
+
+    /* New field map row */
+    .sp-section-header { display: flex; align-items: flex-start; gap: 8px; width: 320px; }
+    .sp-section-label {
+      flex: 1; font-size: 16px; font-weight: 600; color: #071e3e;
+      font-family: var(--pn); line-height: 1.4;
+    }
+    /* Chevron button: bg #f5f5f8 36x36 rounded-24px */
+    .sp-chevron {
+      width: 36px; height: 36px; border-radius: 24px; background: #f5f5f8;
+      border: none; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0; transition: background 0.15s;
+    }
+    .sp-chevron:hover { background: #ebebef; }
+    .sp-chevron-img { width: 11.4px; height: 7.1px; object-fit: contain; display: block; transition: transform 0.2s; }
+    .sp-chevron.collapsed .sp-chevron-img { transform: scaleY(-1); }
+
+    /* Helper text */
+    .sp-helper {
+      font-size: 14px; font-weight: 500; color: #464653;
+      font-family: var(--pn); line-height: 1.55;
+    }
+
+    /* Field group */
+    .sp-field-group { display: flex; flex-direction: column; gap: 8px; }
+    .sp-field-label {
+      font-size: 16px; font-weight: 500; color: #464653;
+      font-family: var(--pn); line-height: 1.4; white-space: nowrap;
+    }
+
+    /* Dropdown */
+    .sp-dropdown-wrapper { position: relative; width: 100%; }
+    .sp-dropdown {
+      width: 100%; border: 1px solid #aaaab4; border-radius: 5px;
+      background: white; padding: 14px 16px 14px 19px;
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; transition: border-color 0.15s; user-select: none;
+    }
+    .sp-dropdown:hover { border-color: #787885; }
+    .sp-dropdown.open { border-color: #1b6ee4; border-radius: 5px 5px 0 0; }
+    .sp-dropdown-value {
+      font-size: 14px; font-weight: 500; color: #071e3e;
+      font-family: var(--pn); letter-spacing: 0.024em; line-height: 1.4;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    /* Arrow: Figma image 7.5x6px */
+    .sp-dropdown-arrow { flex-shrink: 0; margin-left: 8px; width: 7.5px; height: 6px; object-fit: contain; transition: transform 0.2s; }
+    .sp-dropdown.open .sp-dropdown-arrow { transform: rotate(180deg); }
+
+    .sp-dropdown-menu {
+      display: none; position: absolute; top: 100%; left: 0; right: 0;
+      background: white; border: 1px solid #1b6ee4; border-top: none;
+      border-radius: 0 0 5px 5px; z-index: 100; max-height: 200px;
+      overflow-y: auto; box-shadow: 0 4px 12px rgba(7,30,62,0.12);
+    }
+    .sp-dropdown-menu.open { display: block; }
+    .sp-dropdown-option {
+      padding: 11px 19px; font-size: 14px; font-weight: 500; color: #071e3e;
+      font-family: var(--pn); letter-spacing: 0.024em; cursor: pointer;
+      transition: background 0.1s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sp-dropdown-option:hover { background: #eaf2fd; }
+    .sp-dropdown-option.selected { color: #1b6ee4; font-weight: 600; }
+    .sp-dropdown-option + .sp-dropdown-option { border-top: 1px solid #f0f0f3; }
+
+    /* Info box: bg #eaf2fd h-115px px-18px py-14px */
+    .sp-info-box {
+      background: #eaf2fd; border-radius: 6px;
+      padding: 14px 18px; height: 115px;
+      display: flex; align-items: center;
+    }
+    .sp-info-box p {
+      font-size: 14px; font-weight: 500; color: #464653;
+      font-family: var(--pn); line-height: 1.55; width: 294px;
+    }
+
+    /* UserVoice field group: h-77px justify-end */
+    .sp-uv-group {
+      display: flex; flex-direction: column; gap: 8px;
+      height: 77px; justify-content: flex-end;
+    }
+
+    /* Thin divider (Figma image) */
+    .sp-thin-divider { height: 1px; width: 100%; object-fit: cover; display: block; }
+
+    /* Data type section label */
+    .sp-data-label {
+      font-size: 16px; font-weight: 600; color: #071e3e;
+      font-family: var(--pn); line-height: 1.4;
+    }
+    .sp-data-desc {
+      font-size: 14px; font-weight: 500; color: #464653;
+      font-family: var(--pn); line-height: 1.55; width: 312px;
+    }
+
+    /* Tile sections: gap-18px */
+    .sp-tile-sections { display: flex; flex-direction: column; gap: 18px; }
+
+    .sp-tile-row {
+      display: flex; align-items: stretch;
+      justify-content: space-between; height: 93px;
+    }
+
+    .sp-tile {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: flex-start; padding-top: 12px; gap: 8px;
+      border-radius: 6px; background: #fafafc; cursor: pointer;
+      border: 2px solid transparent; transition: background 0.15s, border-color 0.15s;
+      flex-shrink: 0;
+    }
+    .sp-tile:hover { background: #eaf2fd; }
+    .sp-tile.active { background: #165abb; border-color: #165abb; }
+    .sp-tile.active .sp-tile-lbl { color: white; font-weight: 600; letter-spacing: 0.03em; }
+
+    .sp-tile-icon { width: 40px; height: 40px; object-fit: contain; display: block; }
+
+    .sp-tile-icon-wrap {
+      width: 40px; height: 40px; border-radius: 37px; background: white;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+
+    .sp-tile-lbl {
+      font-size: 12px; font-weight: 400; color: #787885;
+      font-family: var(--pn); letter-spacing: 0.01em; text-align: center;
+      line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* Contextual type warning */
+    .sp-type-warning {
+      display: flex; align-items: flex-start; gap: 8px;
+      background: #fff3ee; border: 1px solid #f5a27a;
+      border-radius: 6px; padding: 10px 13px;
+      font-size: 13px; font-weight: 500; color: #b94a1a;
+      font-family: var(--pn); line-height: 1.5;
+      max-height: 0; opacity: 0; overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.25s ease, padding 0.3s ease;
+      padding-top: 0; padding-bottom: 0;
+    }
+    .sp-type-warning.visible {
+      max-height: 80px; opacity: 1;
+      padding-top: 10px; padding-bottom: 10px;
+    }
+
+    /* Buttons section: pt-20px gap-14px */
+    .sp-buttons { display: flex; flex-direction: column; align-items: center; gap: 14px; padding-top: 20px; }
+    .sp-gradient-short { height: 2px; width: 191px; object-fit: cover; display: block; }
+
+    .sp-btn-confirm {
+      width: 100%; height: 48px; background: #dadade; color: #aaaab4;
+      border: none; border-radius: 6px; font-size: 14px; font-weight: 500;
+      font-family: var(--pn); letter-spacing: 0.024em; cursor: not-allowed;
+      transition: background 0.15s, color 0.15s; line-height: 1.4;
+    }
+    .sp-btn-confirm.ready { background: #1b6ee4; color: white; cursor: pointer; }
+    .sp-btn-confirm.ready:hover { background: #165abb; }
+
+    .sp-btn-cancel {
+      font-size: 14px; font-weight: 500; color: #000000;
+      background: none; border: none; cursor: pointer;
+      text-decoration: underline; text-underline-offset: 2px;
+      font-family: var(--pn); letter-spacing: 0.024em; line-height: 1.4;
+      transition: color 0.15s;
+    }
+    .sp-btn-cancel:hover { color: #464653; }
+
+    /* ── Multi-row mapping cards ── */
+    .sp-mr-card {
+      border: 1px solid #dadade; border-radius: 8px;
+      padding: 18px; display: flex; flex-direction: column; gap: 14px;
+      background: #fafafc;
+    }
+    .sp-mr-header {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .sp-mr-label {
+      font-size: 14px; font-weight: 600; color: #787885;
+      font-family: var(--pn);
+    }
+    .sp-mr-remove {
+      width: 26px; height: 26px; border-radius: 50%; background: #ebebef;
+      border: none; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; color: #787885; transition: background 0.15s, color 0.15s;
+      flex-shrink: 0;
+    }
+    .sp-mr-remove:hover { background: #dcdce0; color: #464653; }
+    .sp-add-row-btn {
+      width: 100%; padding: 12px; border: 1.5px dashed #aaaab4; border-radius: 6px;
+      background: none; cursor: pointer; font-size: 14px; font-weight: 500;
+      color: #787885; font-family: var(--pn); transition: border-color 0.15s, color 0.15s;
+    }
+    .sp-add-row-btn:hover { border-color: #1b6ee4; color: #1b6ee4; }
+    .sp-mr-type-pills { display: flex; flex-wrap: wrap; gap: 7px; }
+    .sp-mr-type-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 10px; border-radius: 6px; border: 1.5px solid #dadade;
+      background: white; cursor: pointer; font-size: 12px; font-weight: 500;
+      color: #464653; font-family: var(--pn); transition: border-color 0.15s, background 0.15s, color 0.15s;
+    }
+    .sp-mr-type-pill:hover { border-color: #1b6ee4; color: #1b6ee4; background: #eaf2fd; }
+    .sp-mr-type-pill.active { border-color: #1b6ee4; background: #eaf2fd; color: #1b6ee4; font-weight: 600; }
+    .sp-mr-type-pill img { width: 15px; height: 15px; object-fit: contain; flex-shrink: 0; }
+    .sp-mr-field-group { display: flex; flex-direction: column; gap: 7px; }
+
+    /* ── Status value mapping ── */
+    .sp-status-section {
+      display: none; flex-direction: column; gap: 0;
+      border-top: 1px solid #dadade; margin-top: 4px; padding-top: 16px;
+    }
+    .sp-status-section.visible { display: flex; }
+    .sp-status-section-title {
+      font-size: 14px; font-weight: 400; color: #464653;
+      font-family: var(--pn); margin-bottom: 12px;
+    }
+    .sp-status-item {
+      border: 1px solid #dadade; border-radius: 8px;
+      padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;
+      background: white; margin-bottom: 8px;
+    }
+    .sp-status-item-header { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
+    .sp-status-item-body { display: block; }
+    .sp-status-count {
+      width: 22px; height: 22px; border-radius: 50%; background: #eaf2fd;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      font-size: 11px; font-weight: 700; color: #1b6ee4; font-family: var(--pn);
+    }
+    .sp-status-count.has-value { background: #1a8a4a; color: white; }
+    /* Parent card collapse */
+    .sp-mr-card-body { display: flex; flex-direction: column; gap: 14px; }
+    .sp-mr-card.collapsed .sp-mr-card-body { display: none; }
+    .sp-mr-card-summary {
+      display: none; font-size: 13px; font-weight: 500; color: #787885; font-family: var(--pn);
+    }
+    .sp-mr-card.collapsed .sp-mr-card-summary { display: block; }
+    .sp-mr-header { cursor: pointer; }
+    .sp-mr-card.collapsed { background: white; }
+    .sp-mr-count {
+      width: 20px; height: 20px; border-radius: 50%; background: #eaf2fd;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #1b6ee4; font-family: var(--pn);
+    }
+    .sp-mr-count.has-value { background: #1a8a4a; color: white; }
+    .sp-status-icon {
+      width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; margin-top: 1px;
+    }
+    .sp-status-icon.configured { background: #1a8a4a; }
+    .sp-status-icon.unconfigured { background: #dadade; }
+    .sp-status-icon svg { width: 12px; height: 12px; }
+    .sp-status-name {
+      font-size: 14px; font-weight: 600; color: #071e3e; font-family: var(--pn); line-height: 1.3;
+    }
+    .sp-status-desc {
+      font-size: 12px; font-weight: 400; color: #787885; font-family: var(--pn);
+      line-height: 1.5; margin-top: 2px;
+    }
+    /* Multi-select dropdown */
+    .sp-multiselect-wrapper { position: relative; }
+    .sp-multiselect {
+      width: 100%; border: 1px solid #aaaab4; border-radius: 5px;
+      padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; background: white; transition: border-color 0.15s; user-select: none;
+    }
+    .sp-multiselect:hover { border-color: #787885; }
+    .sp-multiselect.open { border-color: #1b6ee4; border-radius: 5px 5px 0 0; }
+    .sp-multiselect-label {
+      font-size: 13px; font-weight: 500; color: #aaaab4; font-family: var(--pn);
+    }
+    .sp-multiselect-label.has-value { color: #071e3e; }
+    .sp-multiselect-arrow { width: 8px; height: 6px; transition: transform 0.2s; flex-shrink: 0; }
+    .sp-multiselect.open .sp-multiselect-arrow { transform: rotate(180deg); }
+    .sp-multiselect-menu {
+      display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 200;
+      background: white; border: 1px solid #1b6ee4; border-top: none;
+      border-radius: 0 0 5px 5px; max-height: 220px; overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(7,30,62,0.12);
+    }
+    .sp-multiselect-menu.open { display: block; }
+    .sp-multiselect-option {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 14px; cursor: pointer; transition: background 0.1s;
+      font-size: 14px; font-weight: 500; color: #071e3e; font-family: var(--pn);
+    }
+    .sp-multiselect-option:hover { background: #eaf2fd; }
+    .sp-multiselect-option + .sp-multiselect-option { border-top: 1px solid #f0f0f3; }
+    .sp-multiselect-option input[type="checkbox"] { width: 16px; height: 16px; accent-color: #1b6ee4; flex-shrink: 0; cursor: pointer; }
+    .sp-type-select {
+      width: 100%; border: 1px solid #aaaab4; border-radius: 5px;
+      padding: 14px 16px 14px 19px; font-size: 14px; font-weight: 500;
+      color: #071e3e; font-family: var(--pn); letter-spacing: 0.024em;
+      appearance: none; background: white url("data:image/svg+xml,%3Csvg width='8' height='6' viewBox='0 0 8 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L4 5L7 1' stroke='%23787885' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 16px center;
+      outline: none; cursor: pointer; transition: border-color 0.15s;
+    }
+    .sp-type-select:focus { border-color: #1b6ee4; }
+    .sp-type-select option[value=""] { color: #aaaab4; }
+    .sp-uv-input {
+      width: 100%; border: 1px solid #aaaab4; border-radius: 5px;
+      padding: 14px 16px 14px 19px; font-size: 14px; font-weight: 500;
+      color: #071e3e; font-family: var(--pn); letter-spacing: 0.024em;
+      outline: none; transition: border-color 0.15s;
+    }
+    .sp-uv-input::placeholder { color: #aaaab4; font-weight: 400; }
+    .sp-uv-input:focus { border-color: #1b6ee4; }
+
+    /* ── Confirmation screen ── */
+    .sp-confirm-screen {
+      position: absolute; top: 75px; left: 0; right: 0; bottom: 0;
+      background: white; display: flex; flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+      overflow-y: auto; z-index: 10;
+    }
+    .sp-confirm-screen.visible { transform: translateX(0); }
+
+    .sp-confirm-body {
+      padding: 28px 40px; display: flex; flex-direction: column; gap: 20px; flex: 1;
+    }
+
+    .sp-confirm-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: none; border: none; cursor: pointer;
+      font-size: 13px; font-weight: 500; color: #787885;
+      font-family: var(--pn); padding: 0; transition: color 0.15s;
+    }
+    .sp-confirm-back:hover { color: #071e3e; }
+
+    .sp-confirm-heading {
+      font-size: 18px; font-weight: 700; color: #071e3e;
+      font-family: var(--pn); line-height: 1.2;
+    }
+    .sp-confirm-sub {
+      font-size: 14px; font-weight: 500; color: #464653;
+      font-family: var(--pn); line-height: 1.55;
+    }
+
+    .sp-confirm-card {
+      background: #fafafc; border: 1px solid #dadade;
+      border-radius: 8px; overflow: hidden;
+    }
+    .sp-confirm-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; gap: 12px;
+    }
+    .sp-confirm-row + .sp-confirm-row { border-top: 1px solid #dadade; }
+    .sp-confirm-row-label {
+      font-size: 12px; font-weight: 600; color: #aaaab4;
+      font-family: var(--pn); letter-spacing: 0.06em; text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .sp-confirm-row-value {
+      font-size: 13.5px; font-weight: 600; color: #071e3e;
+      font-family: var(--pn); text-align: right;
+    }
+    .sp-confirm-row-value code {
+      font-family: 'SF Mono','Fira Code','Courier New',monospace;
+      font-size: 12px; background: #eaf2fd; color: #1b6ee4;
+      padding: 2px 7px; border-radius: 4px; font-weight: 500;
+    }
+    .sp-confirm-type-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 600; color: #071e3e; font-family: var(--pn);
+    }
+    .sp-confirm-type-pill img { width: 16px; height: 16px; object-fit: contain; }
+
+    .sp-confirm-next {
+      background: #eaf2fd; border-radius: 8px; padding: 16px 18px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .sp-confirm-next-title {
+      font-size: 12px; font-weight: 700; color: #1b6ee4;
+      font-family: var(--pn); letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .sp-confirm-next-item {
+      display: flex; align-items: flex-start; gap: 9px;
+      font-size: 13px; font-weight: 500; color: #464653;
+      font-family: var(--pn); line-height: 1.5;
+    }
+    .sp-confirm-next-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: #1b6ee4;
+      flex-shrink: 0; margin-top: 5px;
+    }
+
+    .sp-confirm-warning {
+      display: flex; align-items: flex-start; gap: 8px;
+      background: #fff3ee; border: 1px solid #f5a27a;
+      border-radius: 6px; padding: 11px 14px;
+      font-size: 13px; font-weight: 500; color: #b94a1a; font-family: var(--pn); line-height: 1.5;
+    }
+    .sp-btn-cancel:hover { color: #464653; }
+  </style>
+</head>
+<body>
+
+<!-- ── Top Nav ── -->
+<nav class="topnav">
+  <a class="topnav-logo" href="#">
+    <div class="topnav-logo-mark">UV</div>
+    UserVoice
+  </a>
+  <div class="breadcrumb">
+    <a href="#">Salesforce Integration</a>
+    <span class="breadcrumb-sep">/</span>
+    <a href="#">Ideas &amp; Feedback</a>
+    <span class="breadcrumb-sep">/</span>
+    <a href="#">UserVoice Custom Fields</a>
+    <span class="breadcrumb-sep">/</span>
+    <span class="current">Field mappings</span>
+  </div>
+</nav>
+
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Analytics</div>
+      <a class="sidebar-item" href="#">
+        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Insights
+      </a>
+      <a class="sidebar-item" href="#">
+        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        AI
+      </a>
+      <a class="sidebar-item sub" href="#">AI tools</a>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Fields</div>
+      <a class="sidebar-item" href="#">
+        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        Account
+      </a>
+      <a class="sidebar-item sub" href="#">Size</a>
+      <a class="sidebar-item sub" href="#">Type</a>
+      <a class="sidebar-item sub" href="#">Industry</a>
+      <a class="sidebar-item sub" href="#">Segment</a>
+      <a class="sidebar-item sub active" href="#">Field mappings</a>
+      <a class="sidebar-item sub" href="#">Custom attributes</a>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Product</div>
+      <a class="sidebar-item" href="#">
+        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+        Roadmaps &amp; Features
+      </a>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <main class="main">
+    <h1 class="page-title">Custom Fields</h1>
+    <p class="page-desc">Map Salesforce account fields to UserVoice for filtering, account views, and AI segmentation.</p>
+
+    <div class="connection-banner">
+      <div class="connection-banner-left">
+        <span class="connection-banner-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1a8a4a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Salesforce Account Sync
+          <span class="sync-status-bar" style="margin:0;">
+            <div class="sync-dot synced"></div>
+            <span class="sync-status-text">Last synced <span class="sync-status-time">today at 6:42 AM</span></span>
+          </span>
+        </span>
+        <span class="connection-banner-url">Instance: https://uservoice.my.salesforce.com</span>
+      </div>
+      <div class="connection-banner-actions">
+        <button class="btn btn-ghost">Force Sync</button>
+        <button class="btn btn-ghost">Reconfigure</button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="search-box">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#aaaab4" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input type="text" placeholder="Search fields…" oninput="filterTable(this.value)" />
+        </div>
+        <button class="btn btn-ghost">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 4h18M7 12h10M11 20h2"/></svg>
+          Filter
+        </button>
+      </div>
+      <button class="btn btn-primary" onclick="openPanel()">
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 4v16M4 12h16"/></svg>
+        Add field
+      </button>
+    </div>
+
+    <div class="table-wrap">
+      <div class="field-count" id="field-count">5 fields</div>
+      <table>
+        <thead>
+          <tr>
+            <th>UserVoice Field</th>
+            <th>Salesforce Field</th>
+            <th>Field Type</th>
+            <th>Mapping</th>
+            <th>Last Edited</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay" onclick="closePanel()"></div>
+
+<!-- ────────────────────────────────────────────
+     SLIDE PANEL — faithful to Figma node 54:458
+──────────────────────────────────────────── -->
+<div class="slide-panel" id="slide-panel">
+
+  <!-- Header -->
+  <div class="sp-header">
+    <span class="sp-header-title">Map custom field</span>
+    <button class="sp-header-close" onclick="closePanel()" aria-label="Close">
+      <img class="sp-header-close-img"
+        src="https://www.figma.com/api/mcp/asset/d14e2acd-5d93-40e7-90b9-3077603ff69a"
+        alt="close" />
+    </button>
+  </div>
+
+  <div class="sp-scrollable">
+  <!-- Body -->
+  <div class="sp-body">
+
+    <!-- Title -->
+    <div class="sp-title-row">
+      <div class="sp-title-icon" style="background:#eaf2fd;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1b6ee4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 3h5v5"/><path d="M21 3l-7 7"/><path d="M8 21H3v-5"/><path d="M3 21l7-7"/>
+          <path d="M21 14v7h-7"/><path d="M14 21l7-7"/><path d="M3 10V3h7"/><path d="M10 3L3 10"/>
+        </svg>
+      </div>
+      <span class="sp-title-text">Field mapping</span>
+    </div>
+
+    <!-- Description -->
+    <p class="sp-description">
+      Each mapping pulls a value from a Salesforce account field and stores it on the matching UserVoice account. Fields sync nightly and unlock filtering, reporting, and AI segmentation.
+    </p>
+
+    <!-- Gradient divider -->
+    <img class="sp-gradient-divider"
+      src="https://www.figma.com/api/mcp/asset/26959f6d-ca8e-402a-86bd-6228d587917f"
+      alt="" />
+
+    <!-- Mapping rows -->
+    <div id="sp-map-rows" style="display:flex;flex-direction:column;gap:14px;"></div>
+
+    <!-- Add another field -->
+    <button class="sp-add-row-btn" onclick="addMapRow()">+ Add another field</button>
+
+    <!-- Buttons -->
+    <div class="sp-buttons">
+      <img class="sp-gradient-short"
+        src="https://www.figma.com/api/mcp/asset/9df24036-3223-49dd-9bf8-090ef10f5eca"
+        alt="" />
+      <button class="sp-btn-confirm" id="sp-confirm-btn" onclick="showConfirm()">Confirm 1 Field Mapping</button>
+      <button class="sp-btn-cancel" onclick="closePanel()">Cancel</button>
+    </div>
+
+  </div><!-- /.sp-scrollable -->
+
+  <!-- Confirmation screen — direct child of slide-panel so it covers the full panel -->
+  <div class="sp-confirm-screen" id="sp-confirm-screen">
+    <div class="sp-confirm-body">
+
+      <button class="sp-confirm-back" onclick="showForm()">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Back to edit
+      </button>
+
+      <div>
+        <p class="sp-confirm-heading">Confirm your mapping</p>
+        <p class="sp-confirm-sub" style="margin-top:6px;">Review the details below before saving. Once synced, the data type cannot be changed.</p>
+      </div>
+
+      <!-- Summary card -->
+      <div class="sp-confirm-card" id="cf-mappings"></div>
+
+      <!-- What happens next -->
+      <div class="sp-confirm-next">
+        <div class="sp-confirm-next-title">What happens next</div>
+        <div class="sp-confirm-next-item"><div class="sp-confirm-next-dot"></div>This field will sync from Salesforce to UserVoice nightly.</div>
+        <div class="sp-confirm-next-item"><div class="sp-confirm-next-dot"></div>It will be available for filtering, account views, and AI segmentation after the first sync.</div>
+        <div class="sp-confirm-next-item"><div class="sp-confirm-next-dot"></div>Existing accounts will be updated on the next scheduled sync.</div>
+      </div>
+
+      <!-- Lock warning -->
+      <div class="sp-confirm-warning">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        <span>Data types cannot be changed after the first sync.</span>
+      </div>
+
+      <!-- Actions -->
+      <div class="sp-buttons" style="padding-top:4px;">
+        <img class="sp-gradient-short"
+          src="https://www.figma.com/api/mcp/asset/9df24036-3223-49dd-9bf8-090ef10f5eca" alt="" />
+        <button class="sp-btn-confirm" onclick="confirmMapping()">Save Field Mapping</button>
+        <button class="sp-btn-cancel" onclick="closePanel()">Cancel</button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── Table data ──
+  const AVATARS = [
+    'https://i.pravatar.cc/28?img=47',
+    'https://i.pravatar.cc/28?img=12',
+    'https://i.pravatar.cc/28?img=25',
+    'https://i.pravatar.cc/28?img=33',
+    'https://i.pravatar.cc/28?img=8',
+  ];
+  const rows = [
+    { id:1, uv:'Account Status',    sfName:'Account Status Picklist', sf:'Account_Status_picklist__c', type:'multi',    typeLbl:'Multi select', plan:'Standard', editor:'Sandra M.',   status:'active'  },
+    { id:2, uv:'Revenue',           sfName:'Account MRR',             sf:'Account_MRR__c',             type:'number',   typeLbl:'Numerical',    plan:'Standard', editor:'Joey S.',     status:'active'  },
+    { id:3, uv:'Account Type',      sfName:'Customer Segment',        sf:'Customer_Segment__c',        type:'text',     typeLbl:'Text Field',   plan:'Standard', editor:'Samantha O.', status:'active'  },
+    { id:4, uv:'Market Segment',    sfName:'Market Segment Picklist', sf:'Market_Segment_Picklist__c', type:'multi',    typeLbl:'Multi select', plan:'Custom',   editor:'Rishi K.',    status:'syncing' },
+    { id:5, uv:'CRM Became Customer Date', sfName:'Became Customer Date', sf:'Became_Customer_Date__c', type:'date',  typeLbl:'Date',         plan:'Custom',   editor:'Lucas M.',    status:'syncing' },
+  ];
+
+  const typeIcon = {
+    text:     `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>`,
+    number:   `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>`,
+    multi:    `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`,
+    currency: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`,
+    yesno:    `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="22" height="14" rx="7"/><circle cx="16" cy="12" r="3" fill="currentColor"/></svg>`,
+    date:     `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+  };
+
+function renderTable(data) {
+    document.getElementById('field-count').textContent = `${data.length} field${data.length!==1?'s':''}`;
+    document.getElementById('table-body').innerHTML = data.map((r,i) => `
+      <tr onclick="openPanel()">
+        <td><span class="uv-field">${r.uv}</span></td>
+        <td><span class="sf-field-name">${r.sfName} <span class="sf-field-api">(${r.sf})</span></span></td>
+        <td><span class="type-cell">${typeIcon[r.type]||typeIcon.text}${r.typeLbl}</span></td>
+        <td><span class="plan-badge plan-${r.plan.toLowerCase()}">${r.plan}</span></td>
+        <td><div class="edited-by"><img class="avatar" src="${AVATARS[i%AVATARS.length]}" alt="${r.editor}" />${r.editor}</div></td>
+        <td><div class="row-actions" onclick="event.stopPropagation()">
+          <button class="icon-btn"><svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>
+        </div></td>
+      </tr>`).join('');
+  }
+
+  renderTable(rows);
+  function filterTable(q) {
+    const s = q.toLowerCase();
+    renderTable(rows.filter(r => r.uv.toLowerCase().includes(s) || r.sf.toLowerCase().includes(s) || r.sfName.toLowerCase().includes(s) || r.typeLbl.toLowerCase().includes(s)));
+  }
+
+  // ── Panel ──
+  function openPanel() {
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('slide-panel').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    // Reset and create first row
+    document.getElementById('sp-map-rows').innerHTML = '';
+    rowCounter = 0;
+    addMapRow();
+    updateConfirmBtn();
+  }
+  function closePanel() {
+    document.getElementById('overlay').classList.remove('open');
+    document.getElementById('slide-panel').classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(showForm, 300);
+  }
+
+  // ── Multi-row logic ──
+  let rowCounter = 0;
+  const ARROW_SRC = 'https://www.figma.com/api/mcp/asset/42dfd916-fdff-4a5a-8300-6f3c8875a675';
+  const TYPE_OPTIONS = [
+    { key:'text',     lbl:'Text Field' },
+    { key:'number',   lbl:'Numerical'  },
+    { key:'multi',    lbl:'Text List'  },
+    { key:'currency', lbl:'Currency'   },
+    { key:'yesno',    lbl:'Yes/No'     },
+    { key:'date',     lbl:'Date'       },
+  ];
+
+  function toggleMapCard(rowId, e) {
+    if (e.target.closest('.sp-mr-remove')) return;
+    const card = document.getElementById(rowId);
+    card.classList.toggle('collapsed');
+  }
+
+  function collapseAllCards() {
+    document.querySelectorAll('.sp-mr-card').forEach(c => c.classList.add('collapsed'));
+  }
+
+  function addMapRow() {
+    collapseAllCards();
+    rowCounter++;
+    const n = rowCounter;
+    const rowId = `mr-${n}`;
+    const card = document.createElement('div');
+    card.className = 'sp-mr-card';
+    card.id = rowId;
+    card.innerHTML = `
+      <div class="sp-mr-header" onclick="toggleMapCard('${rowId}', event)">
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <span class="sp-mr-label">Mapping ${n}</span>
+          <span class="sp-mr-card-summary" id="summary-${rowId}">—</span>
+        </div>
+        <button class="sp-mr-remove" onclick="removeMapRow('${rowId}')" title="Remove">
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="1" y1="1" x2="11" y2="11"/><line x1="11" y1="1" x2="1" y2="11"/></svg>
+        </button>
+      </div>
+      <div class="sp-mr-card-body">
+      <div class="sp-mr-field-group">
+        <span class="sp-field-label" style="font-size:13px;">Salesforce Field</span>
+        <div class="sp-dropdown-wrapper">
+          <div class="sp-dropdown" id="sf-drop-${n}" tabindex="0"
+            onclick="toggleDrop('sf-drop-${n}','sf-menu-${n}')"
+            onkeydown="dropKey(event,'sf-drop-${n}','sf-menu-${n}')">
+            <span class="sp-dropdown-value" id="sf-val-${n}">Select field</span>
+            <img class="sp-dropdown-arrow" src="${ARROW_SRC}" alt="" />
+          </div>
+          <div class="sp-dropdown-menu" id="sf-menu-${n}"></div>
+        </div>
+      </div>
+      <div class="sp-mr-field-group" data-optional>
+        <span class="sp-field-label" style="font-size:13px;">Data type</span>
+        <select class="sp-type-select" id="type-val-${n}" onchange="onTypeChange(this)">
+          <option value="" disabled selected>Select data type</option>
+          ${TYPE_OPTIONS.map(t => `<option value="${t.key}" data-lbl="${t.lbl}">${t.lbl}</option>`).join('')}
+        </select>
+      </div>
+      <div class="sp-mr-field-group" data-optional>
+        <span class="sp-field-label" style="font-size:13px;">UserVoice Field label</span>
+        <input class="sp-uv-input" id="uv-val-${n}" type="text" placeholder="e.g. Contract End Date" oninput="updateConfirmBtn()" />
+      </div>
+      <div class="sp-status-section" id="status-section-${n}">
+        <p class="sp-status-section-title">Map Salesforce values to each account status</p>
+        ${UV_STATUSES.map(s => `
+          <div class="sp-status-item" id="status-item-${n}-${s.key}">
+            <div class="sp-status-item-header">
+              <p class="sp-status-name">${s.name}</p>
+              <span class="sp-status-count" id="status-count-${n}-${s.key}">0</span>
+            </div>
+            <div class="sp-status-item-body">
+              ${s.desc ? `<p class="sp-status-desc" style="margin-bottom:10px;">${s.desc}</p>` : ''}
+              <div class="sp-multiselect-wrapper">
+                <div class="sp-multiselect" onclick="toggleMultiselect(this)">
+                  <span class="sp-multiselect-label">Assign a value</span>
+                  <svg class="sp-multiselect-arrow" viewBox="0 0 8 6" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L4 5L7 1" stroke="#787885" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="sp-multiselect-menu">
+                  ${STATUS_PICKLIST.map(v => `
+                    <label class="sp-multiselect-option">
+                      <input type="checkbox" value="${v}" onchange="updateMultiselectLabel(this,'${n}','${s.key}')" />
+                      ${v}
+                    </label>`).join('')}
+                </div>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>
+      </div>
+      `;
+    document.getElementById('sp-map-rows').appendChild(card);
+    buildRowMenu(`sf-menu-${n}`, sfOpts, `sf-val-${n}`);
+    updateConfirmBtn();
+  }
+
+  function removeMapRow(rowId) {
+    const el = document.getElementById(rowId);
+    if (el && document.querySelectorAll('.sp-mr-card').length > 1) {
+      el.remove();
+      updateConfirmBtn();
+    }
+  }
+
+  function onTypeChange(select) { updateConfirmBtn(); }
+
+  // ── Status value mapping ──
+  const STATUS_SF_FIELDS = ['Account_Status__c'];
+  const STATUS_PICKLIST = ['Customer','Former Customer','Open Opportunity','Sales Prospecting','Merged to new Account','Target Account Non-Customer'];
+  const UV_STATUSES = [
+    { key:'active',   name:'Active Accounts',      desc:'Active accounts are typically accounts that are paying customers and using your product. They have not churned and are not sales prospects.' },
+    { key:'churned',  name:'Churned Accounts',      desc:'' },
+    { key:'closed',   name:'Closed-Lost Accounts',  desc:'' },
+    { key:'prospect', name:'Prospect Accounts',     desc:'Prospects are accounts that are still in your sales pipeline.' },
+  ];
+
+  function onSfFieldChange(n, value) {
+    const section = document.getElementById(`status-section-${n}`);
+    if (!section) return;
+    const isStatus = STATUS_SF_FIELDS.includes(value);
+    section.classList.toggle('visible', isStatus);
+    document.getElementById(`mr-${n}`)?.querySelectorAll('[data-optional]').forEach(f => {
+      f.style.display = isStatus ? 'none' : '';
+    });
+  }
+
+function toggleMultiselect(trigger) {
+    const menu = trigger.nextElementSibling;
+    const isOpen = menu.classList.contains('open');
+    // close all other multiselects
+    document.querySelectorAll('.sp-multiselect-menu.open').forEach(m => {
+      m.classList.remove('open');
+      m.previousElementSibling.classList.remove('open');
+    });
+    if (!isOpen) { trigger.classList.add('open'); menu.classList.add('open'); }
+  }
+
+  function updateMultiselectLabel(checkbox, n, statusKey) {
+    const menu = checkbox.closest('.sp-multiselect-menu');
+    const trigger = menu.previousElementSibling;
+    const label = trigger.querySelector('.sp-multiselect-label');
+    const checked = menu.querySelectorAll('input:checked');
+    label.textContent = checked.length === 0 ? 'Assign a value' : `${checked.length} selected`;
+    label.classList.toggle('has-value', checked.length > 0);
+    // update count badge
+    const count = document.getElementById(`status-count-${n}-${statusKey}`);
+    if (count) {
+      count.textContent = checked.length;
+      count.classList.toggle('has-value', checked.length > 0);
+    }
+  }
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.sp-multiselect-wrapper')) {
+      document.querySelectorAll('.sp-multiselect-menu.open').forEach(m => {
+        m.classList.remove('open');
+        m.previousElementSibling.classList.remove('open');
+      });
+    }
+  });
+
+  function updateConfirmBtn() {
+    const cards = document.querySelectorAll('.sp-mr-card');
+    const count = cards.length;
+    const btn = document.getElementById('sp-confirm-btn');
+    if (!btn) return;
+    btn.textContent = `Confirm ${count} Field Mapping${count !== 1 ? 's' : ''}`;
+    const allReady = [...cards].every(card => {
+      const n = card.id.replace('mr-', '');
+      const sf = document.getElementById(`sf-val-${n}`)?.textContent;
+      const isStatus = document.getElementById(`status-section-${n}`)?.classList.contains('visible');
+      if (isStatus) return sf && sf !== 'Select field';
+      const uv = document.getElementById(`uv-val-${n}`)?.value.trim();
+      const type = document.getElementById(`type-val-${n}`)?.value;
+      return sf && sf !== 'Select field' && uv && type;
+    });
+    btn.classList.toggle('ready', allReady);
+  }
+
+  // ── Confirm screen ──
+  const tileIcons = {
+    'Text Field': 'https://www.figma.com/api/mcp/asset/e7ff887c-f130-4fad-bc79-96591a96adc6',
+    'Numerical':  'https://www.figma.com/api/mcp/asset/c96e8337-f7cf-4cad-8e40-2a67dd67df47',
+    'Text List':  'https://www.figma.com/api/mcp/asset/55ed3beb-d8f8-47e0-8fc7-595cb05e1df9',
+    'Currency':   'https://www.figma.com/api/mcp/asset/3f9a8809-ca1f-4f60-abcb-c727f89117c2',
+    'Yes/No':     'https://www.figma.com/api/mcp/asset/13513de6-0a8e-4563-852b-cdfc907b5073',
+    'Date':       'https://www.figma.com/api/mcp/asset/74613bac-4dc8-455a-aae1-fd40ef035dfd',
+  };
+
+  function showConfirm() {
+    const cards = document.querySelectorAll('.sp-mr-card');
+    const mappings = [];
+    let allValid = true;
+    cards.forEach(card => {
+      const n = card.id.replace('mr-', '');
+      const sf = document.getElementById(`sf-val-${n}`)?.textContent;
+      const uv = document.getElementById(`uv-val-${n}`)?.value.trim();
+      const typeSelect = document.getElementById(`type-val-${n}`);
+      const typeLbl = typeSelect?.options[typeSelect.selectedIndex]?.dataset.lbl || '';
+      if (!typeSelect?.value || sf === 'Select field' || !uv) { allValid = false; }
+      mappings.push({ sf, uv, lbl: typeLbl, key: typeSelect?.value || 'text' });
+    });
+    if (!allValid) {
+      cards.forEach(card => {
+        const n = card.id.replace('mr-', '');
+        const activeType = card.querySelector('.sp-mr-type-pill.active');
+        const sel = document.getElementById(`type-val-${n}`);
+        if (!sel?.value) { /* highlight select */ sel?.classList.add('sp-input-error'); }
+      });
+      return;
+    }
+    document.getElementById('cf-mappings').innerHTML = mappings.map((m, i) => `
+      ${i > 0 ? '<div style="height:1px;background:#dadade;margin:0;"></div>' : ''}
+      <div class="sp-confirm-row"><span class="sp-confirm-row-label">Salesforce Field</span><span class="sp-confirm-row-value"><code>${m.sf}</code></span></div>
+      <div class="sp-confirm-row"><span class="sp-confirm-row-label">UserVoice Field</span><span class="sp-confirm-row-value">${m.uv}</span></div>
+      <div class="sp-confirm-row"><span class="sp-confirm-row-label">Data Type</span><span class="sp-confirm-row-value"><span class="sp-confirm-type-pill"><img src="${tileIcons[m.lbl]||tileIcons['Text Field']}" style="width:15px;height:15px;object-fit:contain;vertical-align:middle;" /> ${m.lbl}</span></span></div>
+    `).join('');
+    document.querySelector('.sp-header-title').textContent = 'Confirm mapping';
+    document.getElementById('sp-confirm-screen').classList.add('visible');
+  }
+
+  function showForm() {
+    document.getElementById('sp-confirm-screen').classList.remove('visible');
+    document.querySelector('.sp-header-title').textContent = 'Map custom field';
+  }
+
+  function confirmMapping() {
+    const typeMap = {'Text Field':'text','Numerical':'number','Text List':'multi','Currency':'currency','Yes/No':'yesno','Date':'date'};
+    document.querySelectorAll('.sp-mr-card').forEach(card => {
+      const n = card.id.replace('mr-', '');
+      const sf = document.getElementById(`sf-val-${n}`)?.textContent;
+      const uv = document.getElementById(`uv-val-${n}`)?.value.trim();
+      const typeSelect = document.getElementById(`type-val-${n}`);
+      const lbl = typeSelect?.options[typeSelect.selectedIndex]?.dataset.lbl || 'Text Field';
+      rows.push({ id: rows.length+1, uv, sf, type: typeMap[lbl]||'text', typeLbl: lbl, plan:'Custom', editor:'You', status:'syncing' });
+    });
+    renderTable(rows);
+    closePanel();
+  }
+
+  // ── Dropdowns ──
+  const sfOpts = ['Account_Status__c','CSM_Owner_ctr','Account_Tier__c','ARR__c','Contract_End_Date__c','Health_Score__c','Industry__c','NPS_Score__c','Renewal_Date__c','Segment__c','Vertical__c'];
+
+  function buildRowMenu(menuId, opts, valId) {
+    const menu = document.getElementById(menuId);
+    const n = valId.replace('sf-val-', '');
+    opts.forEach(o => {
+      const el = document.createElement('div');
+      el.className = 'sp-dropdown-option';
+      el.textContent = o;
+      el.onclick = e => {
+        e.stopPropagation();
+        document.getElementById(valId).textContent = o;
+        menu.querySelectorAll('.sp-dropdown-option').forEach(x => x.classList.remove('selected'));
+        el.classList.add('selected');
+        closeDrops();
+        onSfFieldChange(n, o);
+        const summary = document.getElementById(`summary-mr-${n}`);
+        if (summary) summary.textContent = o;
+        updateConfirmBtn();
+      };
+      menu.appendChild(el);
+    });
+  }
+
+  function toggleDrop(dropId, menuId) {
+    const drop = document.getElementById(dropId), menu = document.getElementById(menuId);
+    const open = menu.classList.contains('open');
+    closeDrops();
+    if (!open) { drop.classList.add('open'); menu.classList.add('open'); }
+  }
+  function dropKey(e, d, m) {
+    if (e.key==='Enter'||e.key===' ') { e.preventDefault(); toggleDrop(d,m); }
+    if (e.key==='Escape') closeDrops();
+  }
+  function closeDrops() {
+    document.querySelectorAll('.sp-dropdown').forEach(d=>d.classList.remove('open'));
+    document.querySelectorAll('.sp-dropdown-menu').forEach(m=>m.classList.remove('open'));
+  }
+  document.addEventListener('click', e => { if (!e.target.closest('.sp-dropdown-wrapper')) closeDrops(); });
+  document.addEventListener('keydown', e => { if (e.key==='Escape') closePanel(); });
+</script>
+</body>
+</html>
